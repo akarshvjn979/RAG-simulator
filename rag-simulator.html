@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1118;
+    --panel:#171A24;
+    --panel-2:#1D2130;
+    --line:#2A2F40;
+    --line-soft:#232838;
+    --ink:#E9EBF1;
+    --muted:#8B90A2;
+    --faint:#5A6076;
+    /* semantic pipeline hues */
+    --source:#E8A44C;   /* documents / chunks */
+    --query:#3FD0E0;    /* query / retrieval */
+    --gen:#A78BFA;      /* generation */
+    --ok:#5BD98A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(63,208,224,0.06), transparent 60%),
+      radial-gradient(900px 500px at -5% 110%, rgba(167,139,250,0.06), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    line-height:1.55;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:28px 22px 64px}
+
+  /* ---------- header ---------- */
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+  .brand-eyebrow{
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--query);margin:0 0 8px}
+  h1{
+    font-family:"Archivo",sans-serif;font-weight:800;letter-spacing:-.02em;
+    font-size:clamp(30px,5vw,46px);line-height:1;margin:0}
+  h1 .r{color:var(--source)} h1 .a{color:var(--query)} h1 .g{color:var(--gen)}
+  .sub{color:var(--muted);font-size:14px;margin:10px 0 0;max-width:52ch}
+
+  /* ---------- stage rail ---------- */
+  .rail{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 26px;padding:0;list-style:none}
+  .rail li{
+    display:flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid var(--line-soft);
+    border-radius:999px;background:var(--panel);font-family:"IBM Plex Mono",monospace;
+    font-size:12px;color:var(--faint);cursor:pointer;transition:.25s;user-select:none}
+  .rail li .num{font-weight:600}
+  .rail li.done{color:var(--muted);border-color:var(--line)}
+  .rail li.done .num{color:var(--ok)}
+  .rail li.active{color:var(--ink);border-color:var(--query);background:var(--panel-2);
+    box-shadow:0 0 0 1px rgba(63,208,224,.25),0 8px 24px -12px rgba(63,208,224,.5)}
+  .rail li.active .num{color:var(--query)}
+  .rail li:focus-visible{outline:2px solid var(--query);outline-offset:2px}
+
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h2{font-family:"Archivo";font-weight:700;font-size:13px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+  .step-title{font-family:"Archivo";font-weight:700;font-size:22px;margin:6px 0 8px;letter-spacing:-.01em}
+  .step-desc{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .step-desc b{color:var(--ink);font-weight:600}
+  .tag{font-family:"IBM Plex Mono";font-size:11px;padding:2px 7px;border-radius:5px;
+    background:rgba(63,208,224,.1);color:var(--query);border:1px solid rgba(63,208,224,.25)}
+
+  /* ---------- source cards ---------- */
+  .sources{display:flex;flex-direction:column;gap:10px}
+  .doc{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line-soft);
+    border-radius:10px;background:var(--panel-2);opacity:0;transform:translateY(8px);
+    animation:rise .5s forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .doc .ic{width:34px;height:34px;flex:0 0 34px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(232,164,76,.12);color:var(--source);font-family:"IBM Plex Mono";font-size:10px;font-weight:600}
+  .doc .meta{min-width:0}
+  .doc .name{font-size:13.5px;font-weight:500}
+  .doc .kind{font-family:"IBM Plex Mono";font-size:11px;color:var(--faint)}
+  .doc .txt{font-size:12.5px;color:var(--muted);margin-top:3px;display:none}
+  .doc.extracted .txt{display:block;animation:fade .4s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+
+  /* ---------- chunks ---------- */
+  .chunks{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow:auto;padding-right:4px}
+  .chunk{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line-soft);
+    border-radius:9px;background:var(--panel-2);font-size:12.5px;opacity:0;transform:translateY(6px);
+    animation:rise .4s forwards;transition:border-color .3s,box-shadow .3s,background .3s}
+  .chunk .cid{font-family:"IBM Plex Mono";font-size:10px;color:var(--source);flex:0 0 auto;
+    padding-top:1px;font-weight:600}
+  .chunk .ctxt{color:var(--ink)}
+  .chunk .vec{font-family:"IBM Plex Mono";font-size:10.5px;color:var(--faint);margin-top:5px;display:none}
+  .chunk.embedded .vec{display:block;animation:fade .4s}
+  .chunk.hit{border-color:var(--query);background:rgba(63,208,224,.06);
+    box-shadow:0 0 0 1px rgba(63,208,224,.25)}
+  .chunk .score{margin-left:auto;font-family:"IBM Plex Mono";font-size:11px;color:var(--query);
+    flex:0 0 auto;display:none}
+  .chunk.hit .score{display:block}
+
+  /* ---------- vector space (signature) ---------- */
+  .space-card{padding:0;overflow:hidden;position:relative;min-height:420px;display:flex;flex-direction:column}
+  .space-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px}
+  .space-head h2{margin:0}
+  .legend{display:flex;gap:14px;font-family:"IBM Plex Mono";font-size:11px}
+  .legend span{display:flex;align-items:center;gap:6px;color:var(--muted)}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  svg.space{width:100%;flex:1;min-height:340px;display:block}
+  .gridline{stroke:var(--line-soft);stroke-width:.4}
+  .pt{transition:r .4s,opacity .5s,fill .3s;cursor:default}
+  .pt-label{font-family:"IBM Plex Mono";font-size:3.4px;fill:var(--faint);opacity:0;transition:opacity .4s}
+  .showlabels .pt-label{opacity:1}
+  .link{stroke:var(--query);stroke-width:.5;opacity:0;stroke-dasharray:2 2;transition:opacity .5s}
+  .link.on{opacity:.7;animation:dash 14s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-120}}
+  .qpt{opacity:0;transition:opacity .5s}
+  .qpt.on{opacity:1}
+  .qring{fill:none;stroke:var(--query);stroke-width:.5;opacity:.5}
+  .empty-space{position:absolute;inset:0;display:grid;place-items:center;color:var(--faint);
+    font-family:"IBM Plex Mono";font-size:12px;text-align:center;padding:20px;pointer-events:none}
+
+  /* ---------- query input ---------- */
+  .qwrap{margin-top:4px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .preset{font-size:12px;padding:7px 11px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--muted);cursor:pointer;font-family:inherit;transition:.2s}
+  .preset:hover{color:var(--ink);border-color:var(--query)}
+  .qbox{display:flex;gap:8px;margin-top:6px}
+  .qbox input{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:11px 13px;font-family:inherit;font-size:13.5px}
+  .qbox input:focus{outline:none;border-color:var(--query);box-shadow:0 0 0 3px rgba(63,208,224,.12)}
+
+  /* ---------- prompt + response ---------- */
+  .out{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:880px){.out{grid-template-columns:1fr}}
+  .prompt-body{font-family:"IBM Plex Mono";font-size:11.5px;line-height:1.7;white-space:pre-wrap;
+    background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px;padding:14px;
+    max-height:330px;overflow:auto}
+  .prompt-body .k{color:var(--muted)}
+  .prompt-body .ctx{color:var(--source)}
+  .prompt-body .q{color:var(--query)}
+  .answer{font-size:14px;line-height:1.65;color:var(--ink);min-height:60px}
+  .answer .cite{font-family:"IBM Plex Mono";font-size:10px;color:var(--gen);
+    border:1px solid rgba(167,139,250,.3);border-radius:5px;padding:1px 5px;margin:0 1px;
+    background:rgba(167,139,250,.1)}
+  .gen-badge{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono";font-size:11px;
+    color:var(--gen);margin-bottom:10px}
+  .gen-badge i{width:8px;height:8px;border-radius:50%;background:var(--gen);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .cursor{display:inline-block;width:7px;height:15px;background:var(--gen);vertical-align:-2px;
+    animation:blink .9s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
+  .btn{font-family:"Archivo";font-weight:600;font-size:14px;letter-spacing:.01em;border:none;cursor:pointer;
+    padding:12px 20px;border-radius:10px;transition:.2s}
+  .btn.primary{background:var(--query);color:#04222a}
+  .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn.primary:disabled{opacity:.35;cursor:not-allowed;transform:none;filter:none}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .btn.ghost:hover{color:var(--ink);border-color:var(--muted)}
+  .btn:focus-visible{outline:2px solid var(--query);outline-offset:2px}
+  .hint{font-family:"IBM Plex Mono";font-size:11.5px;color:var(--faint)}
+
+  .note{margin-top:14px;font-size:12.5px;color:var(--muted);border-left:2px solid var(--source);
+    padding-left:12px}
+  .note b{color:var(--source);font-weight:600}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+    .link.on{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow">Retrieval · Augmented · Generation</p>
+      <h1><span class="r">R</span><span class="a">A</span><span class="g">G</span> Simulator</h1>
+      <p class="sub">Walk the full pipeline one step at a time — from raw documents to a grounded answer — and watch each chunk get embedded, retrieved, and cited in a live vector space.</p>
+    </div>
+  </header>
+
+  <ul class="rail" id="rail"></ul>
+
+  <div class="grid">
+    <!-- LEFT: stage panel -->
+    <section class="card" id="leftPanel">
+      <h2 id="stageKicker">Stage</h2>
+      <div class="step-title" id="stageTitle"></div>
+      <p class="step-desc" id="stageDesc"></p>
+      <div id="stageBody"></div>
+      <div class="note" id="stageNote" style="display:none"></div>
+    </section>
+
+    <!-- RIGHT: persistent vector space -->
+    <section class="card space-card">
+      <div class="space-head">
+        <h2>Vector space <span class="tag">2D projection</span></h2>
+        <div class="legend">
+          <span><i style="background:var(--source)"></i>chunk</span>
+          <span><i style="background:var(--query)"></i>query</span>
+        </div>
+      </div>
+      <svg class="space" id="space" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-label="Vector space visualization"></svg>
+      <div class="empty-space" id="emptySpace">Embeddings appear here once chunks are stored.</div>
+    </section>
+  </div>
+
+  <!-- OUTPUT row (prompt + answer) appears in later stages -->
+  <div class="out" id="outRow" style="display:none">
+    <div class="card">
+      <h2>Augmented prompt</h2>
+      <div class="prompt-body" id="promptBody"></div>
+    </div>
+    <div class="card">
+      <h2>LLM response</h2>
+      <div class="answer" id="answer"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn primary" id="nextBtn">Load sources ▸</button>
+    <button class="btn ghost" id="restartBtn">Restart</button>
+    <span class="hint" id="hint"></span>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CORPUS — 3 clearly separable topics so clustering is visible.
+   Each chunk gets a fixed 2D position (its "embedding" projected
+   to 2D). Same-topic chunks sit close together -> visible clusters.
+   ============================================================ */
+const CHUNKS = [
+  // topic: coffee  (cluster top-left)
+  {id:"c1", topic:"coffee", x:24, y:30, text:"Espresso is made by forcing near-boiling water through finely ground coffee at about 9 bars of pressure."},
+  {id:"c2", topic:"coffee", x:31, y:24, text:"A balanced espresso shot pulls in 25 to 30 seconds and is topped by a reddish-brown layer of crema."},
+  {id:"c3", topic:"coffee", x:19, y:38, text:"Grind size is the main lever: too coarse runs fast and sour, too fine chokes the machine and tastes bitter."},
+  // topic: plants  (cluster top-right)
+  {id:"c4", topic:"plants", x:74, y:26, text:"Photosynthesis lets plants turn sunlight, water and carbon dioxide into glucose and oxygen."},
+  {id:"c5", topic:"plants", x:80, y:34, text:"The light-dependent reactions occur in the thylakoid membranes and produce ATP and NADPH."},
+  {id:"c6", topic:"plants", x:69, y:20, text:"Chlorophyll absorbs mostly red and blue light and reflects green, which is why leaves look green."},
+  // topic: saturn  (cluster bottom)
+  {id:"c7", topic:"saturn", x:47, y:74, text:"Saturn is the sixth planet from the Sun and is famous for its bright, wide ring system."},
+  {id:"c8", topic:"saturn", x:55, y:70, text:"Saturn's rings are made mostly of ice particles, with some rocky debris and dust mixed in."},
+  {id:"c9", topic:"saturn", x:43, y:80, text:"A day on Saturn lasts only about 10.7 hours, but one orbit around the Sun takes 29 Earth years."},
+];
+
+const SOURCES = [
+  {ic:"PDF", name:"barista-handbook.pdf", kind:"Document · 12 pages", chunks:["c1","c2","c3"],
+   raw:"...pull the shot at nine bars... crema forms in 25–30s... grind is the primary variable..."},
+  {ic:"WAV", name:"biology-lecture.mp3", kind:"Audio → transcript", chunks:["c4","c5","c6"],
+   raw:"...today, photosynthesis... light reactions in the thylakoid... chlorophyll reflects green..."},
+  {ic:"WEB", name:"nasa.gov/saturn", kind:"Webpage", chunks:["c7","c8","c9"],
+   raw:"...sixth planet... rings of ice and rock... 10.7 hour day, 29 year orbit..."},
+];
+
+const STOP = new Set("a an the is are was of to in on for and or with how what why does do made make into it its as at by from long should i my you your".split(" "));
+
+/* ---- lexical retrieval: token overlap between query and chunk ---- */
+function tokens(s){return s.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(t=>t && !STOP.has(t));}
+function score(query, chunkText){
+  const q=new Set(tokens(query)), c=tokens(chunkText);
+  let hit=0; c.forEach(t=>{if(q.has(t))hit++;});
+  // also reward stem-ish partial matches for robustness
+  const cset=new Set(c);
+  q.forEach(t=>{ if(!cset.has(t)){ for(const w of cset){ if(w.startsWith(t)||t.startsWith(w)){hit+=0.5;break;} } } });
+  return hit;
+}
+/* pseudo-cosine for display: squash raw overlap into 0..1 */
+function cosine(raw){ return raw<=0?0 : Math.min(0.99, 0.45 + raw*0.14); }
+
+/* ============================================================ STATE */
+const STAGES = ["Ingest","Extract","Chunk","Embed & store","Query","Retrieve","Augment","Generate"];
+let stage = -1;            // -1 = nothing done yet
+let currentQuery = "";
+let hits = [];             // retrieved chunk ids w/ scores
+
+const $ = s=>document.querySelector(s);
+const svg = $("#space");
+const SVGNS="http://www.w3.org/2000/svg";
+const el=(n,a={})=>{const e=document.createElementNS(SVGNS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+/* ---------- render stage rail ---------- */
+function renderRail(){
+  const rail=$("#rail"); rail.innerHTML="";
+  STAGES.forEach((name,i)=>{
+    const li=document.createElement("li");
+    li.tabIndex=0;
+    li.innerHTML=`<span class="num">${String(i+1).padStart(2,"0")}</span>${name}`;
+    if(i<stage)li.classList.add("done");
+    if(i===stage)li.classList.add("active");
+    const go=()=>{ if(i<=stage) jumpTo(i); };
+    li.onclick=go;
+    li.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}};
+    rail.appendChild(li);
+  });
+}
+
+/* ============================================================ VECTOR SPACE */
+function buildSpaceBase(){
+  svg.innerHTML="";
+  // gridlines
+  for(let i=10;i<100;i+=10){
+    svg.appendChild(el("line",{class:"gridline",x1:i,y1:0,x2:i,y2:100}));
+    svg.appendChild(el("line",{class:"gridline",x1:0,y1:i,x2:100,y2:i}));
+  }
+  // link lines (query -> chunk), created hidden, one per chunk
+  CHUNKS.forEach(c=>{
+    const ln=el("line",{class:"link","data-link":c.id,x1:50,y1:50,x2:c.x,y2:c.y});
+    svg.appendChild(ln);
+  });
+  // chunk points
+  CHUNKS.forEach(c=>{
+    const g=el("g");
+    const p=el("circle",{class:"pt","data-pt":c.id,cx:c.x,cy:c.y,r:0,fill:"var(--source)","fill-opacity":.85});
+    const t=el("text",{class:"pt-label",x:c.x+2.6,y:c.y+1});
+    t.textContent=c.id;
+    g.appendChild(p); g.appendChild(t); svg.appendChild(g);
+  });
+  // query point + ring
+  svg.appendChild(el("circle",{class:"qring qpt",id:"qring",cx:50,cy:50,r:5}));
+  svg.appendChild(el("circle",{class:"qpt",id:"qpt",cx:50,cy:50,r:2.6,fill:"var(--query)"}));
+}
+function embedPoints(){
+  $("#emptySpace").style.display="none";
+  svg.classList.add("showlabels");
+  CHUNKS.forEach((c,i)=>{
+    const p=svg.querySelector(`[data-pt="${c.id}"]`);
+    setTimeout(()=>{ p.setAttribute("r","2.3"); }, i*90);
+  });
+}
+function placeQuery(){
+  // query lands at the centroid of its top matches -> visually near right cluster
+  const top=hits.slice(0,3);
+  let sx=0,sy=0,w=0;
+  top.forEach(h=>{const c=CHUNKS.find(x=>x.id===h.id); const ww=h.raw+0.3; sx+=c.x*ww; sy+=c.y*ww; w+=ww;});
+  const qx = w? sx/w : 50, qy = w? sy/w : 50;
+  ["#qpt","#qring"].forEach(s=>{svg.querySelector(s).setAttribute("cx",qx);svg.querySelector(s).setAttribute("cy",qy);});
+  svg.querySelector("#qpt").classList.add("on");
+  svg.querySelector("#qring").classList.add("on");
+  // point links from query to each chunk
+  CHUNKS.forEach(c=>{const ln=svg.querySelector(`[data-link="${c.id}"]`);ln.setAttribute("x1",qx);ln.setAttribute("y1",qy);});
+}
+function lightRetrieved(){
+  hits.forEach(h=>{
+    svg.querySelector(`[data-link="${h.id}"]`).classList.add("on");
+    const p=svg.querySelector(`[data-pt="${h.id}"]`);
+    p.setAttribute("r","3.4"); p.setAttribute("fill","var(--query)");
+  });
+}
+
+/* ============================================================ RETRIEVAL */
+function runRetrieval(){
+  const ranked=CHUNKS.map(c=>({id:c.id,raw:score(currentQuery,c.text)}))
+                     .sort((a,b)=>b.raw-a.raw);
+  const best=ranked[0].raw;
+  hits = best<=0 ? ranked.slice(0,3).map(h=>({...h}))   // fallback: still show 3
+                 : ranked.filter(h=>h.raw>0).slice(0,3);
+  hits.forEach(h=>h.cos=cosine(h.raw));
+}
+
+/* ============================================================ STAGE CONTENT */
+function renderStage(){
+  renderRail();
+  const kicker=$("#stageKicker"), title=$("#stageTitle"), desc=$("#stageDesc"),
+        body=$("#stageBody"), note=$("#stageNote"), next=$("#nextBtn"), hint=$("#hint");
+  note.style.display="none"; body.innerHTML=""; next.disabled=false;
+  kicker.textContent = stage<0 ? "Start" : `Stage ${stage+1} / ${STAGES.length}`;
+
+  switch(stage){
+    case -1:
+      title.textContent="The problem RAG solves";
+      desc.innerHTML="An LLM can't fit an entire knowledge base in its <b>context window</b>. RAG stores your documents externally and pulls in only the few most relevant pieces per question.";
+      body.innerHTML=`<div class="sources">${SOURCES.map(s=>docHTML(s,false,false)).join("")}</div>`;
+      note.style.display="block";
+      note.innerHTML="<b>Ready:</b> 3 sources — a PDF, an audio transcript, and a webpage.";
+      next.textContent="Load sources ▸";
+      hint.textContent="";
+      break;
+
+    case 0: // Ingest
+      title.textContent="1 · Ingest the sources";
+      desc.innerHTML="Documents arrive in many formats — <b>PDF, audio/video, webpages</b>. RAG doesn't care about the format; it just needs the content.";
+      body.innerHTML=`<div class="sources">${SOURCES.map(s=>docHTML(s,false,false)).join("")}</div>`;
+      next.textContent="Extract text ▸";
+      break;
+
+    case 1: // Extract
+      title.textContent="2 · Extract to plain text";
+      desc.innerHTML="Every source is converted to <b>raw text</b> — a PDF is parsed, audio is transcribed, HTML is stripped. Now everything is uniform.";
+      body.innerHTML=`<div class="sources">${SOURCES.map(s=>docHTML(s,true,false)).join("")}</div>`;
+      next.textContent="Split into chunks ▸";
+      break;
+
+    case 2: // Chunk
+      title.textContent="3 · Split into chunks";
+      desc.innerHTML="Long text is cut into small <b>chunks</b> (a few sentences each). This is the step people usually get backwards — <b>chunking happens now, at ingestion, not after retrieval.</b>";
+      body.innerHTML=`<div class="chunks">${CHUNKS.map(c=>chunkHTML(c,false,false)).join("")}</div>`;
+      note.style.display="block";
+      note.innerHTML=`<b>${CHUNKS.length} chunks</b> created from 3 sources.`;
+      next.textContent="Embed & store ▸";
+      break;
+
+    case 3: // Embed & store
+      title.textContent="4 · Embed & store";
+      desc.innerHTML="Each chunk is passed through an embedding model that turns it into a <b>vector</b> — a list of numbers capturing meaning. Chunks about similar things land close together in vector space. →";
+      body.innerHTML=`<div class="chunks">${CHUNKS.map(c=>chunkHTML(c,true,false)).join("")}</div>`;
+      note.style.display="block";
+      note.innerHTML="Watch the points settle into <b>3 clusters</b> on the right — one per topic. That clustering is what makes retrieval work.";
+      next.textContent="Ask a question ▸";
+      break;
+
+    case 4: // Query
+      title.textContent="5 · Embed the query";
+      desc.innerHTML="A question comes in. <b>The query gets embedded too</b>, using the same model — so it lands in the same vector space as the chunks.";
+      body.innerHTML=queryHTML();
+      wireQuery();
+      next.textContent="Retrieve top matches ▸";
+      next.disabled = !currentQuery;
+      hint.textContent = currentQuery ? "" : "Pick or type a question first.";
+      break;
+
+    case 5: // Retrieve
+      title.textContent="6 · Retrieve top-k";
+      desc.innerHTML=`A <b>similarity search</b> finds the chunks nearest to the query vector. We keep the top ${hits.length} (the "k"). Lines on the right connect the query to its neighbours.`;
+      body.innerHTML=`<div class="chunks">${CHUNKS.map(c=>chunkHTML(c,true,true)).join("")}</div>`;
+      note.style.display="block";
+      note.innerHTML=`Query: <b>"${escapeHTML(currentQuery)}"</b> → matched cluster with cosine similarity up to <b>${hits[0].cos.toFixed(2)}</b>.`;
+      next.textContent="Augment the prompt ▸";
+      break;
+
+    case 6: // Augment
+      title.textContent="7 · Augment the prompt";
+      desc.innerHTML="The retrieved chunks are <b>pasted into the prompt</b> alongside the question. The LLM now has grounded context to answer from — this is the 'augmented' in RAG.";
+      body.innerHTML=`<div class="chunks">${hits.map(h=>chunkHTML(CHUNKS.find(c=>c.id===h.id),true,true,h)).join("")}</div>`;
+      showPrompt();
+      next.textContent="Generate answer ▸";
+      break;
+
+    case 7: // Generate
+      title.textContent="8 · Generate the answer";
+      desc.innerHTML="The LLM reads context + question and writes a grounded answer, <b>citing the chunks it used</b>. No retrieval = a guess. With retrieval = an answer you can trace.";
+      body.innerHTML=`<div class="chunks">${hits.map(h=>chunkHTML(CHUNKS.find(c=>c.id===h.id),true,true,h)).join("")}</div>`;
+      next.textContent="↻ Ask another question";
+      streamAnswer();
+      break;
+  }
+}
+
+/* ---------- small HTML builders ---------- */
+function docHTML(s,extracted){
+  return `<div class="doc ${extracted?'extracted':''}">
+    <div class="ic">${s.ic}</div>
+    <div class="meta">
+      <div class="name">${s.name}</div>
+      <div class="kind">${s.kind}</div>
+      <div class="txt">“${s.raw}”</div>
+    </div></div>`;
+}
+function chunkHTML(c,embedded,retrievable,hit){
+  const isHit = retrievable && hits.some(h=>h.id===c.id);
+  const h = hit || hits.find(x=>x.id===c.id);
+  const vec = embedded ? `<div class="vec">[${fakeVec(c.id)} … 768 dims]</div>` : "";
+  const sc = isHit && h ? `<span class="score">cos ${h.cos.toFixed(2)}</span>` : "";
+  return `<div class="chunk ${embedded?'embedded':''} ${isHit?'hit':''}">
+    <span class="cid">${c.id}</span>
+    <div class="ctxt">${c.text}${vec}</div>${sc}</div>`;
+}
+function queryHTML(){
+  const presets=["How long should I pull an espresso shot?","Why are leaves green?","What are Saturn's rings made of?"];
+  return `<div class="qwrap">
+    <div class="hint" style="margin-bottom:2px">Try a preset:</div>
+    <div class="presets">${presets.map(p=>`<button class="preset" data-q="${escapeHTML(p)}">${p}</button>`).join("")}</div>
+    <div class="qbox">
+      <input id="qInput" type="text" placeholder="…or type your own question" value="${escapeHTML(currentQuery)}" autocomplete="off">
+    </div>
+  </div>`;
+}
+function wireQuery(){
+  const input=$("#qInput");
+  document.querySelectorAll(".preset").forEach(b=>{
+    b.onclick=()=>{ input.value=b.dataset.q; setQuery(b.dataset.q); };
+  });
+  input.oninput=e=>setQuery(e.target.value.trim());
+  input.onkeydown=e=>{ if(e.key==="Enter" && currentQuery){ advance(); } };
+}
+function setQuery(q){
+  currentQuery=q;
+  const next=$("#nextBtn"), hint=$("#hint");
+  next.disabled=!q;
+  hint.textContent=q?"":"Pick or type a question first.";
+}
+
+function showPrompt(){
+  $("#outRow").style.display="grid";
+  const ctx=hits.map(h=>{const c=CHUNKS.find(x=>x.id===h.id);return `  <span class="ctx">[${c.id}] ${c.text}</span>`;}).join("\n");
+  $("#promptBody").innerHTML=
+`<span class="k">SYSTEM:</span> Answer using only the context. Cite chunk ids.
+
+<span class="k">CONTEXT:</span>
+${ctx}
+
+<span class="k">QUESTION:</span> <span class="q">${escapeHTML(currentQuery)}</span>`;
+  $("#answer").innerHTML=`<span style="color:var(--faint);font-family:'IBM Plex Mono';font-size:12px">awaiting generation…</span>`;
+}
+
+/* ---------- mock "LLM" answer built from retrieved chunks ---------- */
+function answerFor(){
+  const topic=CHUNKS.find(c=>c.id===hits[0].id).topic;
+  const cite=id=>`<span class="cite">${id}</span>`;
+  const bank={
+    coffee:`A balanced shot pulls in about <b>25–30 seconds</b> ${cite('c2')}, producing a reddish-brown crema. If it runs too fast and sour or too slow and bitter, adjust the grind — that's the main lever ${cite('c3')}.`,
+    plants:`Leaves look green because <b>chlorophyll reflects green light</b> while absorbing red and blue ${cite('c6')}. That captured light powers photosynthesis, which converts sunlight, water and CO₂ into glucose and oxygen ${cite('c4')}.`,
+    saturn:`Saturn's rings are made <b>mostly of ice particles</b>, with some rocky debris and dust ${cite('c8')} — part of the bright, wide ring system it's famous for ${cite('c7')}.`
+  };
+  return bank[topic] || `Based on the retrieved context ${cite(hits[0].id)}, here's a grounded answer to "${escapeHTML(currentQuery)}".`;
+}
+function streamAnswer(){
+  const box=$("#answer");
+  box.innerHTML=`<div class="gen-badge"><i></i>generating from context</div><div id="stream"></div>`;
+  const target=$("#stream");
+  const html=answerFor();
+  const reduce=window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(reduce){ target.innerHTML=html; return; }
+  // reveal by tokens (word-ish), keeping tags intact
+  const parts=html.split(/(<[^>]+>)/g);
+  let out=""; let i=0;
+  target.innerHTML=`<span class="cursor"></span>`;
+  const tick=()=>{
+    if(i>=parts.length){ target.innerHTML=out; return; }
+    const chunk=parts[i++];
+    if(chunk.startsWith("<")){ out+=chunk; target.innerHTML=out+`<span class="cursor"></span>`; setTimeout(tick,10); }
+    else{
+      const words=chunk.split(/(\s+)/);
+      let j=0;
+      const wtick=()=>{
+        if(j>=words.length){ setTimeout(tick,0); return; }
+        out+=words[j++]; target.innerHTML=out+`<span class="cursor"></span>`;
+        setTimeout(wtick,28);
+      };
+      wtick();
+    }
+  };
+  tick();
+}
+
+/* ---------- utils ---------- */
+function fakeVec(id){ // deterministic pretty numbers per chunk
+  let s=0; for(const ch of id) s+=ch.charCodeAt(0);
+  const r=n=>((Math.sin(s*n)*0.5).toFixed(2));
+  return `${r(1.3)}, ${r(2.7)}, ${r(4.1)}, ${r(5.9)}`;
+}
+function escapeHTML(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+/* ============================================================ FLOW CONTROL */
+function advance(){
+  // side effects that must fire on entering a stage
+  if(stage===7){ resetToQuery(); return; }
+  stage++;
+  renderStage();
+  if(stage===3) embedPoints();
+  if(stage===4){ /* query stage */ }
+  if(stage===5){ runRetrieval(); renderStage(); placeQuery(); setTimeout(lightRetrieved,450); }
+  if(stage===6){ /* prompt shown in renderStage */ }
+}
+function jumpTo(target){
+  // rebuild deterministically up to target
+  hardReset(false);
+  for(let s=0;s<=target;s++){
+    stage=s;
+    if(s===3){ renderStage(); embedPoints(); }
+    else if(s===5){ if(!currentQuery){currentQuery="How long should I pull an espresso shot?";} runRetrieval(); renderStage(); placeQuery(); lightRetrieved(); }
+    else renderStage();
+  }
+}
+function resetToQuery(){
+  currentQuery=""; hits=[];
+  buildSpaceBase(); embedPoints();
+  $("#outRow").style.display="none";
+  stage=4; renderStage();
+}
+function hardReset(rerender=true){
+  stage=-1; currentQuery=""; hits=[];
+  buildSpaceBase();
+  $("#emptySpace").style.display="grid";
+  svg.classList.remove("showlabels");
+  $("#outRow").style.display="none";
+  if(rerender) renderStage();
+}
+
+/* ---------- init ---------- */
+$("#nextBtn").onclick=advance;
+$("#restartBtn").onclick=()=>hardReset(true);
+buildSpaceBase();
+renderStage();
+</script>
+</body>
+</html>
