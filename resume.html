@@ -1,226 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akarsh Vijayan - Resume</title>
-    <style>
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background-color: #f4f7f6; 
-            color: #333; 
-            line-height: 1.5; 
-        }
-        .resume-container { 
-            max-width: 900px; 
-            margin: 30px auto; 
-            background: #ffffff; 
-            padding: 40px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-            display: grid; 
-            grid-template-columns: 1fr 2.2fr; 
-            gap: 30px; 
-            border-top: 6px solid #2c3e50;
-        }
-        header { 
-            grid-column: 1 / -1; 
-            padding-bottom: 20px; 
-            border-bottom: 1px solid #eaeaea; 
-            margin-bottom: 10px; 
-        }
-        h1 { 
-            margin: 0; 
-            color: #2c3e50; 
-            font-size: 2.6em; 
-            letter-spacing: -0.5px;
-        }
-        .headline {
-            font-size: 1.1em;
-            color: #555;
-            font-weight: 500;
-            margin-top: 5px;
-        }
-        h2 { 
-            color: #2c3e50; 
-            font-size: 1.3em; 
-            margin-bottom: 15px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #3498db; 
-            display: inline-block;
-            padding-bottom: 3px;
-        }
-        h3 { 
-            margin: 15px 0 5px 0; 
-            font-size: 1.1em; 
-            color: #222; 
-        }
-        .contact-info { 
-            display: flex; 
-            gap: 15px; 
-            flex-wrap: wrap; 
-            margin-top: 15px; 
-            font-size: 0.9em; 
-            color: #555; 
-        }
-        .contact-info span {
-            display: flex;
-            align-items: center;
-        }
-        .left-column { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 25px; 
-        }
-        .right-column { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 25px; 
-        }
-        ul { 
-            margin: 0; 
-            padding-left: 18px; 
-        }
-        li { 
-            margin-bottom: 8px; 
-            font-size: 0.95em; 
-            color: #444;
-        }
-        .job-meta { 
-            font-size: 0.9em; 
-            color: #7f8c8d; 
-            font-style: italic; 
-            margin-bottom: 10px; 
-            display: flex;
-            justify-content: space-between;
-        }
-        p { 
-            margin: 5px 0; 
-            font-size: 0.95em; 
-            color: #444;
-        }
-        .skills-list li, .cert-list li {
-            list-style-type: square;
-            margin-bottom: 10px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akarsh Vijayan — Product Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1d21;
+    --muted:#5c6470;
+    --line:#e3e6ea;
+    --accent:#0b6b5f;
+    --bg:#ffffff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:#f2f3f5;
+    line-height:1.5;
+    padding:32px 16px;
+  }
+  .page{
+    max-width:820px;margin:0 auto;background:var(--bg);
+    padding:48px 52px;box-shadow:0 4px 24px rgba(0,0,0,.06);
+  }
+  header{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:24px}
+  h1{font-family:'Fraunces',serif;font-size:38px;font-weight:600;letter-spacing:-.5px}
+  .role{color:var(--accent);font-weight:600;font-size:15px;margin-top:4px}
+  .contact{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .contact a{color:var(--muted);text-decoration:none}
+  .summary{font-size:13.5px;color:var(--muted);margin-bottom:26px;max-width:64ch}
+  .grid{display:grid;grid-template-columns:1fr 200px;gap:40px}
+  h2{
+    font-family:'Fraunces',serif;font-size:13px;font-weight:600;
+    text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);
+    margin-bottom:14px;padding-bottom:5px;border-bottom:1px solid var(--line);
+  }
+  .job{margin-bottom:18px}
+  .job-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .job-title{font-weight:600;font-size:14px}
+  .company{font-size:13px;color:var(--accent);font-weight:500}
+  .date{font-size:11.5px;color:var(--muted);white-space:nowrap}
+  ul{list-style:none;margin-top:6px}
+  li{font-size:12.5px;color:var(--muted);padding-left:14px;position:relative;margin-bottom:4px}
+  li::before{content:"";position:absolute;left:0;top:8px;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+  .side h2{margin-top:0}
+  .side-block{margin-bottom:22px}
+  .tag{display:inline-block;font-size:11.5px;background:#eef2f1;color:var(--ink);padding:4px 9px;border-radius:4px;margin:0 4px 5px 0}
+  .edu-item{margin-bottom:12px}
+  .edu-item strong{font-size:12.5px;display:block}
+  .edu-item span{font-size:11.5px;color:var(--muted)}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}.page{padding:32px 24px}h1{font-size:30px}}
+  @media print{body{background:#fff;padding:0}.page{box-shadow:none;padding:32px}}
+</style>
 </head>
 <body>
-    <div class="resume-container">
-        <header>
-            <h1>Akarsh Vijayan[cite: 1]</h1>
-            <div class="headline">Product Manager @PasarPolis | Agency | B2B | SaaS | ex PayPal, Shopalyst | Mentored in 3 startups | Professional Scrum Master Tableau certified developer[cite: 1]</div>
-            <div class="contact-info">
-                <span>📍 Greater Bengaluru Area[cite: 1]</span>
-                <span>📞 +919870325365[cite: 1]</span>
-                <span>✉️ akarshv@dbe-du.org[cite: 1]</span>
-                <span>🔗 www.linkedin.com/in/akarsh-vjn[cite: 1]</span>
-            </div>
-        </header>
-
-        <div class="left-column">
-            <section>
-                <h2>Top Skills</h2>
-                <ul class="skills-list">
-                    <li>Data-driven Decision Making[cite: 1]</li>
-                    <li>Travel[cite: 1]</li>
-                    <li>Creativity and Innovation[cite: 1]</li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>Certifications</h2>
-                <ul class="cert-list">
-                    <li>Statistics Foundations: 1[cite: 1]</li>
-                    <li>Statistics Foundations: 2[cite: 1]</li>
-                    <li>Statistics Foundations: 3[cite: 1]</li>
-                    <li>Excel Statistics Essential Training: 1[cite: 1]</li>
-                    <li>Lean Six Sigma Foundations[cite: 1]</li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>Education</h2>
-                <h3>University of Delhi[cite: 1]</h3>
-                <p>Master of Business Administration - MBA, Business/Managerial Economics[cite: 1]</p>
-                <p class="job-meta">Department of Business Economics (July 2016 - May 2018)[cite: 1]</p>
-
-                <h3>Amrita Vishwa Vidyapeetham[cite: 1]</h3>
-                <p>Bachelor of Technology / Bachelor of Engineering, Mechanical Engineering[cite: 1]</p>
-                <p class="job-meta">(2011 - 2015)[cite: 1]</p>
-            </section>
-        </div>
-
-        <div class="right-column">
-            <section>
-                <h2>Summary</h2>
-                <p>MBA Graduate in Analytics and Marketing with a foundation in Mechanical Engineering[cite: 1]. I'm a Data Analyst turned Product Manager with a passion for solving customer pain points through data-driven product and process improvements[cite: 1]. Experienced in business analysis, data analytics, UI/UX, experimentation, stakeholder management, and project delivery[cite: 1]. Skilled at collaborating with full-stack tech teams to translate customer and business needs into functional features and impactful product enhancements[cite: 1]. Keen on discussions around startups, product innovation, and football. Manchester United fan since 2004[cite: 1].</p>
-            </section>
-
-            <section>
-                <h2>Experience</h2>
-                
-                <h3>Product Manager - PasarPolis[cite: 1]</h3>
-                <div class="job-meta">
-                    <span>March 2022 - Present[cite: 1]</span>
-                    <span>Bengaluru[cite: 1]</span>
-                </div>
-                <p>Southeast Asia's leading Insurtech company headquartered in Indonesia with a mission to democratize insurance for all[cite: 1].</p>
-                <ul>
-                    <li>Launched a new insurance product, overseeing the complete end-to-end process from ideation to market introduction[cite: 1].</li>
-                    <li>Introduced Renewals programme, which increased our renewal rate by 2X[cite: 1].</li>
-                    <li>Automated key bottlenecks, streamlining operations and improving user experience for faster, more efficient processes[cite: 1].</li>
-                    <li>Collaborated with the Data Science team to develop an OCR-based system, reducing application and verification time significantly[cite: 1].</li>
-                    <li>Developed an Agent Fraud Detection framework using historical data and pattern analysis to minimize fraudulent activities[cite: 1].</li>
-                </ul>
-
-                <h3>Senior Data Analyst - PayPal[cite: 1]</h3>
-                <div class="job-meta">
-                    <span>April 2021 - March 2022[cite: 1]</span>
-                    <span>Bangalore Urban[cite: 1]</span>
-                </div>
-                <ul>
-                    <li>Discovered useful Insights from Consumer and Merchant related Marketing Campaigns for PayPal products across regions: UK, US, FR, GER & AUS[cite: 1].</li>
-                    <li>Conducted comprehensive marketing funnel analysis to identify customer onboarding bottlenecks and areas for improvement based on drop-off rates[cite: 1].</li>
-                    <li>Performed in-depth analysis of campaigns and landing pages to optimize customer targeting, planning, and retargeting strategies[cite: 1].</li>
-                    <li>Leveraged SMB analytics to extract actionable insights on merchant performance, driving data-backed decisions for business growth[cite: 1].</li>
-                    <li>Developed and maintained dashboards to track key performance indicators (KPIs) for long-term marketing initiatives, ensuring alignment with strategic goals[cite: 1].</li>
-                    <li>Setting-up A/B Test cohorts and doing the A/B analysis to determine the effectiveness of different marketing campaigns[cite: 1].</li>
-                </ul>
-
-                <h3>Product Data Manager - Shopalyst[cite: 1]</h3>
-                <div class="job-meta">
-                    <span>October 2018 - April 2021[cite: 1]</span>
-                    <span>Bangalore[cite: 1]</span>
-                </div>
-                <p>Leverage data and AI to help measure the impact of advertising and promotional spending on brands' market share across popular media and e-commerce platforms[cite: 1]. Powers some of the world's best brands and eCommerce businesses - Unilever, P&G, Adidas, Nordstrom, Target, etc[cite: 1].</p>
-                <ul>
-                    <li>Delivered data products and brand intelligence tools across multi-marketplace environments for enterprise clients in India and Southeast Asia[cite: 1].</li>
-                    <li>Created a new revenue stream by developing Custom Insight Dashboards, providing actionable data to drive business growth[cite: 1].</li>
-                    <li>Built a Brand Knowledge Graph to offer a comprehensive performance overview, becoming an integral part of Shopalyst's product suite[cite: 1].</li>
-                    <li>Developed and implemented a unified merchant analysis solution, streamlining the sales and marketing process for brands and driving operational efficiencies[cite: 1].</li>
-                    <li>Enhanced brand sales across e-commerce platforms through detailed requirement analysis, data cleaning, business analysis, and dashboard reporting, improving performance tracking and decision-making[cite: 1].</li>
-                    <li>Standardized product categorization across multiple e-commerce retailers by mapping products and brands, creating a holistic approach to optimize sales and marketing efforts[cite: 1].</li>
-                    <li>Conducted market share analysis across online marketplaces, utilizing price and discount benchmarking through competitor analysis to inform pricing and promotional strategies[cite: 1].</li>
-                </ul>
-
-                <h3>Product Manager - CoinedOne[cite: 1]</h3>
-                <div class="job-meta">
-                    <span>June 2018 - October 2018[cite: 1]</span>
-                    <span>Cochin Area, India[cite: 1]</span>
-                </div>
-                <p>Improving digital experience of a website by monitoring uptime, backlinks, SEO score, search score, etc[cite: 1].</p>
-                <ul>
-                    <li>Collaborated closely with CXOs and Technology teams to define and execute the go-to-market (GTM) strategy, successfully launching the first phase of the product[cite: 1].</li>
-                    <li>Conducted in-depth market research to identify trending features for a digital experience monitoring platform, ensuring the product aligns with market demands[cite: 1].</li>
-                    <li>Performed trade-off analysis to evaluate features based on effort versus impact and profitability, prioritizing high-value features for optimal resource allocation and product success[cite: 1].</li>
-                    <li>Design and execute qualitative or quantitative analyses to help product improve its commercial effectiveness[cite: 1].</li>
-                    <li>Handling & monitoring day to day implementations of product features[cite: 1].</li>
-                </ul>
-            </section>
-        </div>
+<div class="page">
+  <header>
+    <h1>Akarsh Vijayan</h1>
+    <div class="role">Product Manager · Data & AI</div>
+    <div class="contact">
+      <span>+91 98703 25365</span>
+      <a href="mailto:akarshv@dbe-du.org">akarshv@dbe-du.org</a>
+      <a href="https://www.linkedin.com/in/akarsh-vjn">linkedin.com/in/akarsh-vjn</a>
+      <span>Greater Bengaluru Area</span>
     </div>
+  </header>
+
+  <p class="summary">
+    Data Analyst turned Product Manager focused on solving customer pain points through
+    data-driven product and process improvements. Experienced in business analysis, analytics,
+    UI/UX, experimentation, stakeholder management, and delivery — translating customer and
+    business needs into impactful features with full-stack teams.
+  </p>
+
+  <div class="grid">
+    <div class="main">
+      <section>
+        <h2>Experience</h2>
+
+        <div class="job">
+          <div class="job-head">
+            <div><span class="job-title">Product Manager</span> · <span class="company">PasarPolis</span></div>
+            <span class="date">Mar 2022 — Present</span>
+          </div>
+          <ul>
+            <li>Launched a new insurance product end-to-end, from ideation to market introduction.</li>
+            <li>Introduced Renewals programme, increasing renewal rate by 2X.</li>
+            <li>Built an OCR-based system with Data Science, cutting application and verification time significantly.</li>
+            <li>Developed an Agent Fraud Detection framework using historical data and pattern analysis.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <div><span class="job-title">Senior Data Analyst</span> · <span class="company">PayPal</span></div>
+            <span class="date">Apr 2021 — Mar 2022</span>
+          </div>
+          <ul>
+            <li>Surfaced consumer and merchant campaign insights across UK, US, FR, GER & AUS.</li>
+            <li>Ran marketing funnel and drop-off analysis to fix onboarding bottlenecks.</li>
+            <li>Set up A/B cohorts and analysis to measure campaign effectiveness.</li>
+            <li>Built KPI dashboards to track long-term marketing initiatives.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <div><span class="job-title">Product Data Manager</span> · <span class="company">Shopalyst</span></div>
+            <span class="date">Oct 2018 — Apr 2021</span>
+          </div>
+          <ul>
+            <li>Delivered data products and brand intelligence tools for enterprise clients in India & SEA.</li>
+            <li>Created a new revenue stream via Custom Insight Dashboards.</li>
+            <li>Built a Brand Knowledge Graph, now an integral part of the product suite.</li>
+            <li>Standardized product categorization across marketplaces for market-share analysis.</li>
+          </ul>
+        </div>
+
+        <div class="job">
+          <div class="job-head">
+            <div><span class="job-title">Product Manager</span> · <span class="company">CoinedOne</span></div>
+            <span class="date">Jun 2018 — Oct 2018</span>
+          </div>
+          <ul>
+            <li>Defined and executed GTM with CXOs and tech, launching phase one of the product.</li>
+            <li>Ran effort-vs-impact trade-off analysis to prioritize high-value features.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <aside class="side">
+      <div class="side-block">
+        <h2>Skills</h2>
+        <span class="tag">Data-driven Decisions</span>
+        <span class="tag">Product Strategy</span>
+        <span class="tag">A/B Testing</span>
+        <span class="tag">UI/UX</span>
+        <span class="tag">Stakeholder Mgmt</span>
+        <span class="tag">SaaS · B2B</span>
+        <span class="tag">Analytics</span>
+        <span class="tag">Innovation</span>
+      </div>
+
+      <div class="side-block">
+        <h2>Education</h2>
+        <div class="edu-item">
+          <strong>MBA, Analytics & Marketing</strong>
+          <span>University of Delhi · 2016–2018</span>
+        </div>
+        <div class="edu-item">
+          <strong>B.Tech, Mechanical Engg.</strong>
+          <span>Amrita Vishwa Vidyapeetham · 2011–2015</span>
+        </div>
+      </div>
+
+      <div class="side-block">
+        <h2>Certifications</h2>
+        <ul>
+          <li>Professional Scrum Master</li>
+          <li>Tableau Certified Developer</li>
+          <li>Lean Six Sigma Foundations</li>
+          <li>Statistics Foundations 1–3</li>
+          <li>Excel Statistics Essentials</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
 </body>
 </html>
